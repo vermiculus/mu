@@ -71,31 +71,32 @@ the current query; otherwise, it links to the message at point.")
    :link        (concat "mu4e:query:" (mu4e-last-query))
    :description (format "[%s]" (mu4e-last-query))))
 
-(defun mu4e--org-store-link-message ()
-  "Store a link to a mu4e message."
+(defun mu4e--org-store-link-message (&optional msg)
+  "Store a link to MSG, a mu4e message.
+If nil, the message at point is used."
   (setq org-store-link-plist nil)
-  (let* ((msg      (mu4e-message-at-point))
-         (from     (car-safe (plist-get msg :from)))
-         (to       (car-safe (plist-get msg :to)))
-         (date     (format-time-string "%FT%T" (plist-get msg :date)))
-         (msgid    (or (plist-get msg :message-id)
-                       (mu4e-error "Cannot link message without message-id")))
-         (props (list :type  "mu4e"
-                      :date              date
-                      :from              (mu4e-contact-full from)
-                      :fromname          (mu4e-contact-name from)
-                      :fromnameoraddress (or (mu4e-contact-name from)
-                                             (mu4e-contact-email from)) ;; mu4e-specific
-                      :maildir           (plist-get msg :maildir)
-                      :message-id        msgid
-                      :path              (plist-get msg :path)
-                      :subject           (plist-get msg :subject)
-                      :to                (mu4e-contact-full to)
-                      :tonameoraddress   (or (mu4e-contact-name to)
-                                             (mu4e-contact-email to)) ;; mu4e-specific
-                      :link              (concat "mu4e:msgid:" msgid)
-                      :description       (funcall mu4e-org-link-desc-func msg))))
-    (apply #'org-store-link-props props)))
+  (setq msg (or msg (mu4e-message-at-point)))
+  (let ((from     (car-safe (plist-get msg :from)))
+        (to       (car-safe (plist-get msg :to)))
+        (date     (format-time-string "%FT%T" (plist-get msg :date)))
+        (msgid    (or (plist-get msg :message-id)
+                      (mu4e-error "Cannot link message without message-id"))))
+    (org-store-link-props
+     :type  "mu4e"
+     :date              date
+     :from              (mu4e-contact-full from)
+     :fromname          (mu4e-contact-name from)
+     :fromnameoraddress (or (mu4e-contact-name from)
+                            (mu4e-contact-email from)) ;; mu4e-specific
+     :maildir           (plist-get msg :maildir)
+     :message-id        msgid
+     :path              (plist-get msg :path)
+     :subject           (plist-get msg :subject)
+     :to                (mu4e-contact-full to)
+     :tonameoraddress   (or (mu4e-contact-name to)
+                            (mu4e-contact-email to)) ;; mu4e-specific
+     :link              (concat "mu4e:msgid:" msgid)
+     :description       (funcall mu4e-org-link-desc-func msg))))
 
 (defun mu4e-org-store-link ()
   "Store a link to a mu4e message or query.
